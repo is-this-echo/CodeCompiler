@@ -17,6 +17,7 @@ const App = () => {
 
     try {
       const { data } = await axios.post("http://localhost:5000/run", payload);
+      console.log(data.jobId);
       setOutput(data.output);
     } catch ({ response }) {
       if (response) {
@@ -35,7 +36,6 @@ const App = () => {
           value={language}
           onChange={(e) => {
             setLanguage(e.target.value);
-            console.log(e.target.value);
           }}
         >
           <option value="cpp">C++</option>
