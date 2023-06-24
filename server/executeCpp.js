@@ -10,7 +10,7 @@ if (!fs.existsSync(outputDir)) {
 
 const escapeBackslash = (arg) => arg.replace(/\\/g, "\\\\");
 
-const executeProgram = (filePath) => {
+const executeCpp = (filePath) => {
   // server\codes\100b2585-166f-43ab-9492-2717c8b88752.cpp
   const jobId = path.basename(filePath).split(".")[0];
   const outputFilePath = path.join(outputDir, `${jobId}.exe`);
@@ -21,20 +21,16 @@ const executeProgram = (filePath) => {
         outputFilePath
       )} && cd ${escapeBackslash(outputDir)} && ${jobId}.exe`,
       (error, stdout, stderr) => {
-        if (error) {
-          reject({ error, stderr });
-        }
-        if (stderr) {
-          reject(stderr);
-        }
+        error && reject({ error, stderr });
+        stderr && reject(stderr);
         resolve(stdout);
       }
     );
   }).catch((error) => {
     // Handle the error here
-    console.error("Error in executeProgram:", error);
+    // console.error("Error in executeProgram:", error);
     throw error; // Rethrow the error to propagate it further
   });
 };
 
-module.exports = { executeProgram };
+module.exports = { executeCpp };
