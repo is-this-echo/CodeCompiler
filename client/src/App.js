@@ -8,6 +8,8 @@ const App = () => {
   const [code, setCode] = useState("");
   const [language, setLanguage] = useState("cpp");
   const [output, setOutput] = useState("");
+  const [status, setStatus] = useState("");
+  const [jobId, setJobId] = useState();
 
   const handleSubmit = async () => {
     const payload = {
@@ -16,15 +18,53 @@ const App = () => {
     };
 
     try {
+      setJobId("");
+      setStatus("");
+      setOutput("");
+
       const { data } = await axios.post("http://localhost:5000/run", payload);
-      console.log(data.jobId);
-      setOutput(data.output);
+      setJobId(data.jobId);
+
+      let polling;
+      polling = setInterval(async () => {
+        const { data: dataRes } = await axios.get(
+          "http://localhost:5000/status",
+          { params: { id: data.jobId } }
+        );
+
+        const { success, error, job } = dataRes;
+        console.log(dataRes);
+
+        if (success) {
+          const { status: jobStatus, output: jobOutput } = job;
+          setStatus(jobStatus);
+
+          if (jobStatus === "Pending") return;
+
+          setOutput(jobOutput);
+          clearInterval(polling);
+        } else {
+          console.error(error);
+
+          setStatus("Error: Please check if code is valid..");
+          setOutput(error);
+          clearInterval(polling);
+        }
+      }, 1500);
     } catch ({ response }) {
       if (response) {
         const errMsg = response.data.error.stderr;
         setOutput(errMsg);
       } else setOutput("Error connection to server...");
     }
+  };
+
+  const resetStats = () => {
+    setCode("");
+
+    setJobId("");
+    setStatus("");
+    setOutput("");
   };
 
   return (
@@ -52,8 +92,14 @@ const App = () => {
         }}
       ></textarea>
       <br />
-      <button onClick={handleSubmit}>Submit Code</button>
-      <p>{output}</p>
+      <div style={{ display: "flex", justifyContent: "space-evenly" }}>
+        <button onClick={handleSubmit}>Submit Code</button>
+        <button onClick={resetStats}>Reset</button>
+      </div>
+
+      <p>{jobId && `JobID: ${jobId}`}</p>
+      <p>{status && `Status: ${status}`}</p>
+      <p>{output && `Result: ${output}`}</p>
     </div>
   );
 };
