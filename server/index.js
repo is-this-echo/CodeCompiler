@@ -3,8 +3,7 @@ const cors = require("cors");
 const mongoose = require("mongoose");
 
 const { createProgramFile } = require("./CreateProgramFile");
-const { executeCpp } = require("./ExecuteCpp");
-const { executePy } = require("./ExecutePy");
+const { addJobToQueue } = require("./JobQueue");
 const { Job } = require("./models/Job");
 
 const app = express();
@@ -17,7 +16,7 @@ const PORT = process.env.PORT || 5000;
 
 app.get("/status", async (req, res) => {
   const jobId = req.query.id;
-
+  console.log("Requesting status for: ", jobId);
   if (jobId === undefined) {
     res
       .status(400)
@@ -41,7 +40,6 @@ app.get("/status", async (req, res) => {
 
 app.post("/run", async (req, res) => {
   const { language = "cpp", code } = req.body;
-  console.log(language);
 
   if (code === undefined) {
     return res.status(400).json({ success: false, error: "Missing code body" });
@@ -58,36 +56,14 @@ app.post("/run", async (req, res) => {
     job = await new Job({ language, filepath }).save();
     const jobId = job["_id"];
 
+    /* job object created and added to queue, 
+      worker process will handle rest of the code
+     */
+    addJobToQueue(jobId);
+
     res.status(201).json({ success: true, jobId });
-
-    let output;
-    job["startedAt"] = new Date();
-    console.log(job);
-
-    switch (language) {
-      case "cpp":
-        output = await executeCpp(filepath);
-        break;
-      case "py":
-        output = await executePy(filepath);
-        break;
-    }
-
-    job["completedAt"] = new Date();
-    job["output"] = output;
-    job["status"] = "Completed";
-
-    await job.save();
-    console.log(job);
-    // return res.json({ filepath, output });
-  } catch (error) {
-    job["completedAt"] = new Date();
-    job["output"] = JSON.stringify(error);
-    job["status"] = "Error";
-
-    await job.save();
-    console.log(job);
-    // res.status(500).json({ error });
+  } catch (err) {
+    return res.status(500).send({ success: false, error: JSON.stringify(err) });
   }
 });
 
