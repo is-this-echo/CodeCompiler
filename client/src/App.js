@@ -1,6 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 import axios from "axios";
+import moment from "moment";
+import Stubs from "./Stubs";
 
 import "./App.css";
 
@@ -10,7 +12,48 @@ const App = () => {
   const [output, setOutput] = useState("");
   const [status, setStatus] = useState("");
   const [jobId, setJobId] = useState();
+  const [jobDetails, setJobDetails] = useState();
 
+  useEffect(() => {
+    const defaultLang = localStorage.getItem("default-language") || "cpp";
+    setLanguage(defaultLang);
+  }, []);
+
+  useEffect(() => {
+    setCode(Stubs[language]);
+  }, [language]);
+
+  const setDefaultLanguage = () => {
+    localStorage.setItem("default-language", language);
+  };
+
+  const resetStats = () => {
+    setCode("");
+    setJobId("");
+    setStatus("");
+    setOutput("");
+    setJobDetails();
+  };
+
+  const renderJobDetails = () => {
+    if (!jobDetails) {
+      return "";
+    }
+    // calculate time taken to run code
+    let result = "";
+    let { submittedAt, startedAt, completedAt } = jobDetails;
+    submittedAt = moment(submittedAt).toString();
+    result += `Submitted at: ${submittedAt}`;
+
+    if (!completedAt || !submittedAt) return result;
+
+    const start = moment(startedAt);
+    const end = moment(completedAt);
+    const executionTime = end.diff(start, "seconds", true);
+    result += ` Execution time: ${executionTime}s`;
+
+    return result;
+  };
   const handleSubmit = async () => {
     const payload = {
       language,
@@ -21,6 +64,7 @@ const App = () => {
       setJobId("");
       setStatus("");
       setOutput("");
+      setJobDetails();
 
       const { data } = await axios.post("http://localhost:5000/run", payload);
       setJobId(data.jobId);
@@ -38,6 +82,7 @@ const App = () => {
         if (success) {
           const { status: jobStatus, output: jobOutput } = job;
           setStatus(jobStatus);
+          setJobDetails(job);
 
           if (jobStatus === "Pending") return;
 
@@ -59,14 +104,6 @@ const App = () => {
     }
   };
 
-  const resetStats = () => {
-    setCode("");
-
-    setJobId("");
-    setStatus("");
-    setOutput("");
-  };
-
   return (
     <div className="App">
       <h1>Code Compiler</h1>
@@ -75,12 +112,19 @@ const App = () => {
         <select
           value={language}
           onChange={(e) => {
-            setLanguage(e.target.value);
+            let response = window.confirm(
+              "WARNING: Switching the language will erase the current code. Do you wish to proceed?"
+            );
+            if (response) setLanguage(e.target.value);
           }}
         >
           <option value="cpp">C++</option>
           <option value="py">Python</option>
         </select>
+      </div>
+      <br />
+      <div>
+        <button onClick={setDefaultLanguage}>Set default</button>
       </div>
       <br />
       <textarea
@@ -99,6 +143,7 @@ const App = () => {
 
       <p>{jobId && `JobID: ${jobId}`}</p>
       <p>{status && `Status: ${status}`}</p>
+      <p>{renderJobDetails()}</p>
       <p>{output && `Result: ${output}`}</p>
     </div>
   );
