@@ -105,46 +105,107 @@ const App = () => {
   };
 
   return (
-    <div className="App">
-      <h1>Code Compiler</h1>
-      <div>
-        <label>Language: </label>
-        <select
-          value={language}
-          onChange={(e) => {
-            let response = window.confirm(
-              "WARNING: Switching the language will erase the current code. Do you wish to proceed?"
-            );
-            if (response) setLanguage(e.target.value);
-          }}
-        >
-          <option value="cpp">C++</option>
-          <option value="py">Python</option>
-        </select>
-      </div>
-      <br />
-      <div>
-        <button onClick={setDefaultLanguage}>Set default</button>
-      </div>
-      <br />
-      <textarea
-        rows="25"
-        cols="75"
-        value={code}
-        onChange={(e) => {
-          setCode(e.target.value);
-        }}
-      ></textarea>
-      <br />
-      <div style={{ display: "flex", justifyContent: "space-evenly" }}>
-        <button onClick={handleSubmit}>Submit Code</button>
-        <button onClick={resetStats}>Reset</button>
-      </div>
+    <div class="Container">
+      <nav class="navbar sticky-top bg-body-tertiary">
+        <div class="container-fluid">
+          <a class="navbar-brand" href="#">
+            <h1 class="display-5"> Code Compiler</h1>
+          </a>
+        </div>
+      </nav>
 
-      <p>{jobId && `JobID: ${jobId}`}</p>
-      <p>{status && `Status: ${status}`}</p>
-      <p>{renderJobDetails()}</p>
-      <p>{output && `Result: ${output}`}</p>
+      <div class="container text-center">
+        <div class="row row-cols-2">
+          <div class="col">
+            <div class="row">
+              <div class="col">
+                <div class="container text-center">
+                  <div class="row">
+                    <div class="col">Language :</div>
+                    <div class="col">
+                      <select
+                        class="form-select"
+                        aria-label="Default select example"
+                        style={{ width: "100px" }}
+                        value={language}
+                        onChange={(e) => {
+                          let response = window.confirm(
+                            "WARNING: Switching the language will erase the current code. Do you wish to proceed?"
+                          );
+                          if (response) setLanguage(e.target.value);
+                        }}
+                      >
+                        <option value="cpp">C++</option>
+                        <option value="py">Python</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col">
+                <button
+                  type="button"
+                  class="btn btn-outline-secondary"
+                  onClick={setDefaultLanguage}
+                >
+                  Set default
+                </button>
+              </div>
+            </div>
+            <div class="form-floating">
+              <textarea
+                class="form-control"
+                placeholder="Write code here..."
+                id="floatingTextarea2"
+                style={{ height: "460px" }}
+                value={code}
+                onChange={(e) => {
+                  setCode(e.target.value);
+                }}
+              ></textarea>
+            </div>
+            <br />
+            <div style={{ display: "flex", justifyContent: "space-between" }}>
+              <button
+                type="button"
+                class="btn btn-outline-primary"
+                onClick={resetStats}
+              >
+                Reset
+              </button>
+              <button
+                type="button"
+                class="btn btn-outline-danger"
+                onClick={handleSubmit}
+              >
+                Submit Code
+              </button>
+            </div>
+          </div>
+          <div class="col">
+            <br />
+            <br />
+
+            <div class="form-floating">
+              <div class="card mb-5">
+                <div class="card-body">
+                  <h5 class="card-title">Result</h5>
+                  <p class="card-text">{output && `${output}`}</p>
+                </div>
+              </div>
+              <div class="card">
+                <div class="card-body">
+                  <h5 class="card-title">Code Analytics</h5>
+
+                  <p class="card-text">{jobId && `JobID: ${jobId}`}</p>
+                  <p class="card-text">{status && `Status: ${status}`}</p>
+                  <p class="card-text">{renderJobDetails()}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
